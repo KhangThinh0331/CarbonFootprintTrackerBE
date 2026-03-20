@@ -1,0 +1,27 @@
+package com.khangthinh.carbonfootprinttracker.service.impl;
+
+import com.khangthinh.carbonfootprinttracker.entity.Challenge;
+import com.khangthinh.carbonfootprinttracker.repository.ChallengeRepository;
+import com.khangthinh.carbonfootprinttracker.service.ChallengeService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class ChallengeServiceImpl implements ChallengeService {
+    private final ChallengeRepository challengeRepository;
+
+    // Lấy danh sách tất cả thử thách để hiển thị lên giao diện
+    @Override
+    public Page<Challenge> getAllChallenges(Pageable pageable) {
+        return challengeRepository.findAll(pageable);
+    }
+
+    // Chỉ Admin mới được dùng hàm này (Sẽ chặn ở Controller bằng @PreAuthorize)
+    @Override
+    public Challenge createChallenge(Challenge challenge) {
+        return challengeRepository.save(challenge);
+    }
+}
