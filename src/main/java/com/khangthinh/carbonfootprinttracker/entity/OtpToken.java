@@ -9,7 +9,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "otp_tokens")
+@Table(name = "otp_tokens", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "type"})
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -37,7 +39,7 @@ public class OtpToken {
     private OtpType type;
 
     // Liên kết 1-1 với User (Mỗi token thuộc về 1 user)
-    @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "user_id")
     private User user;
 

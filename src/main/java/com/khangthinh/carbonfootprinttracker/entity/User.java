@@ -63,7 +63,4 @@ public class User {
     )
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private OtpToken otpToken;
 }

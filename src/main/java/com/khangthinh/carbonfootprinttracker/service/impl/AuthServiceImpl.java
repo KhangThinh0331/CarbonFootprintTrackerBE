@@ -31,6 +31,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -51,12 +52,47 @@ public class AuthServiceImpl implements AuthService {
         return String.valueOf(num);
     }
 
+    private void createAndSendOtp(User user, OtpToken.OtpType type) {
+        otpTokenRepository.deleteByUserIdAndType(user.getId(), type);
+
+        String otp = generateOtp();
+
+        OtpToken otpToken = OtpToken.builder()
+                .otpCode(otp)
+                .expiryDate(LocalDateTime.now().plusMinutes(5))
+                .type(type)
+                .user(user)
+                .build();
+
+        otpTokenRepository.save(otpToken);
+
+        try {
+            emailService.sendOtpEmail(user.getEmail(), otp);
+        } catch (Exception e) {
+            // Nếu gửi mail lỗi (sai định dạng, lỗi server mail...),
+            // ném RuntimeException để ép Spring ROLLBACK toàn bộ User và OTP vừa lưu.
+            throw new RuntimeException("Không thể gửi mã xác minh. Vui lòng kiểm tra lại địa chỉ email!");
+        }
+    }
+
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
 
     @Transactional
     @Override
     public String registerUser(RegisterRequest request) {
+        Optional<User> existingInactiveUser =
+                userRepository.findByEmailAndIsActiveFalse(request.getEmail());
+
+        if (existingInactiveUser.isPresent()) {
+            User user = existingInactiveUser.get();
+            user.setUsername(request.getUsername());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setFullName(request.getFullName());
+            userRepository.save(user);
+            createAndSendOtp(user, OtpToken.OtpType.REGISTRATION);
+            return "Email đã tồn tại nhưng chưa xác minh. OTP mới đã được gửi!";
+        }
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Lỗi: Username đã tồn tại!");
         }
@@ -173,6 +209,9 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản với email này!"));
 
+        if (!user.isActive()) {
+            throw new RuntimeException("Tài khoản này chưa được xác minh!");
+        }
         // Xóa các mã OTP cũ (nếu có) để tránh spam hoặc trùng lặp
         otpTokenRepository.deleteByUserIdAndType(user.getId(), OtpToken.OtpType.FORGOT_PASSWORD);
 
@@ -208,6 +247,14 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản với email này!"));
 
+        if (!user.isActive()) {
+            throw new RuntimeException("Tài khoản này chưa được xác minh!");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new RuntimeException("Mật khẩu mới không được trùng với mật khẩu cũ!");
+        }
+
         OtpToken otpToken = otpTokenRepository.findByOtpCodeAndType(request.getOtpCode(), OtpToken.OtpType.FORGOT_PASSWORD)
                 .orElseThrow(() -> new RuntimeException("Mã OTP không chính xác!"));
 
@@ -239,6 +286,9 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản với email này!"));
 
+        if (!user.isActive()) {
+            throw new RuntimeException("Tài khoản này chưa được xác minh!");
+        }
         // 2. Tìm OTP quên mật khẩu hiện tại
         OtpToken otpToken = otpTokenRepository.findByUserIdAndType(user.getId(), OtpToken.OtpType.FORGOT_PASSWORD)
                 .orElseGet(() -> OtpToken.builder().user(user).type(OtpToken.OtpType.FORGOT_PASSWORD).build());

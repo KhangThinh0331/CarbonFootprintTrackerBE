@@ -1,6 +1,7 @@
 package com.khangthinh.carbonfootprinttracker.exception;
 
 import com.khangthinh.carbonfootprinttracker.dto.ErrorResponse;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -89,6 +90,36 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(
+            ConstraintViolationException ex,
+            WebRequest request
+    ) {
+
+        Map<String, String> errors = new HashMap<>();
+
+        // lấy tất cả lỗi
+        ex.getConstraintViolations().forEach(v -> {
+            String field = v.getPropertyPath().toString(); // vd: forgotPassword.email
+            String message = v.getMessage();
+            errors.put(field, message);
+        });
+
+        // lấy message đầu tiên
+        String firstErrorMessage = errors.values().stream().findFirst()
+                .orElse("Dữ liệu không hợp lệ");
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Validation Failed")
+                .message(firstErrorMessage)
+                .validationErrors(errors)
+                .path(request.getDescription(false).replace("uri=", ""))
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
     // 4. Xử lý lỗi Validation (Dữ liệu đầu vào không hợp lệ)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
@@ -101,11 +132,14 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
 
+        String firstErrorMessage = errors.values().stream().findFirst()
+                .orElse("Dữ liệu không hợp lệ");
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value()) // HTTP 400
                 .error("Validation Failed")
-                .message("Dữ liệu đầu vào không hợp lệ. Vui lòng kiểm tra lại!")
+                .message(firstErrorMessage)
                 .validationErrors(errors) // Đưa danh sách lỗi vào đây
                 .path(request.getDescription(false).replace("uri=", ""))
                 .build();

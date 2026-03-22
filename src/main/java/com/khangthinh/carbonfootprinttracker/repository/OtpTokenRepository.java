@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -13,6 +14,7 @@ public interface OtpTokenRepository extends JpaRepository<OtpToken, Long> {
     // Tìm token theo mã OTP (dùng khi user nhập mã xác minh)
     Optional<OtpToken> findByOtpCodeAndType(String otpCode, OtpToken.OtpType type);
     Optional<OtpToken> findByUserIdAndType(Long userId, OtpToken.OtpType type);
+    void deleteByTypeAndLastSentAtBefore(OtpToken.OtpType type, LocalDateTime dateTime);
     @Modifying
     @Query("DELETE FROM OtpToken o WHERE o.user.id = :userId AND o.type = :type")
     void deleteByUserIdAndType(Long userId, OtpToken.OtpType type);

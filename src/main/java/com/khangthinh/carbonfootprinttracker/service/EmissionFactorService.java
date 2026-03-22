@@ -1,9 +1,9 @@
 package com.khangthinh.carbonfootprinttracker.service;
 
-import com.khangthinh.carbonfootprinttracker.entity.EmissionFactor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.khangthinh.carbonfootprinttracker.dto.EmissionFactorResponse;
+
+import java.util.List;
 
 public interface EmissionFactorService {
-    Page<EmissionFactor> getFactorsByCategoryId(Long categoryId, Pageable pageable);
+    List<EmissionFactorResponse> getFactorsByCategoryId(Long categoryId);
 }

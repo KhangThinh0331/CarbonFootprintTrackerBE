@@ -21,7 +21,7 @@ import java.time.LocalDate;
 @Table(name = "challenges")
 public class Challenge {
     @Id
-    @NotBlank(message = "ID không được để trống")
+    @NotNull(message = "ID không được để trống")
     @Positive(message = "ID phải lớn hơn 0")
     @Column(name = "id")
     private Long id;
@@ -36,18 +36,28 @@ public class Challenge {
     @Column(name = "description")
     private String description;
 
-    @NotBlank(message = "Điểm số không được để trống.")
+    @NotNull(message = "Điểm số không được để trống.")
     @Min(value = 0, message = "Điểm số không được là số âm")
     @Column(name = "points")
     private Integer points;
 
-    @NotBlank(message = "Vui lòng chọn ngày bắt đầu")
+    @NotNull(message = "Vui lòng chọn ngày bắt đầu")
+    @FutureOrPresent(message = "Ngày bắt đầu phải là hiện tại hoặc tương lai")
     @Column(name = "start_date")
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate startDate;
 
-    @NotBlank(message = "Vui lòng chọn ngày kết thúc")
+    @NotNull(message = "Vui lòng chọn ngày kết thúc")
+    @Future(message = "Ngày kết thúc phải ở tương lai")
     @Column(name = "end_date")
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate endDate;
+
+    @AssertTrue(message = "Ngày kết thúc phải sau ngày bắt đầu")
+    private boolean isValidDateRange() {
+        if (startDate == null || endDate == null) {
+            return true; // Để @NotNull xử lý
+        }
+        return startDate.isBefore(endDate) || startDate.isEqual(endDate);
+    }
 }

@@ -16,4 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
     void deleteByIsActiveFalseAndCreatedAtBefore(LocalDateTime dateTime);
+
+    Optional<User> findByEmailAndIsActiveFalse(String email);
+
+    Boolean existsByRoles_Name(String role);
 }

@@ -19,7 +19,7 @@ public class EmissionFactorController {
 
     // Lấy danh sách hệ số phát thải theo ID của danh mục (Ví dụ: /api/emission-factors/category/1)
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<?> getFactorsByCategory(@PathVariable Long categoryId, @PageableDefault(size = 15, page = 0) Pageable pageable) {
-        return ResponseEntity.ok(emissionFactorService.getFactorsByCategoryId(categoryId, pageable));
+    public ResponseEntity<?> getFactorsByCategory(@PathVariable Long categoryId) {
+        return ResponseEntity.ok(emissionFactorService.getFactorsByCategoryId(categoryId));
     }
 }
