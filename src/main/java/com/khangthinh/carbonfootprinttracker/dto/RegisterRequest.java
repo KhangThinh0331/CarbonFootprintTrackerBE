@@ -25,7 +25,7 @@ public class RegisterRequest {
     )
     private String password;
 
-    @NotBlank(message = "Họ và tên không được để trống")
-    @Size(max = 100, message = "Họ và tên không được vượt quá 100 ký tự")
+    @NotBlank(message = "Tên người dùng không được để trống")
+    @Size(max = 100, message = "Tên người dùng không được vượt quá 100 ký tự")
     private String fullName;
 }

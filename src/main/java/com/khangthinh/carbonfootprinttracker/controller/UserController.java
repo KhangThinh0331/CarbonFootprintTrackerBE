@@ -1,9 +1,9 @@
 package com.khangthinh.carbonfootprinttracker.controller;
 
 import com.khangthinh.carbonfootprinttracker.dto.ChangePasswordRequest;
+import com.khangthinh.carbonfootprinttracker.dto.UserProfileRequest;
 import com.khangthinh.carbonfootprinttracker.service.UserService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -26,9 +26,9 @@ public class UserController {
     }
 
     // Cập nhật mục tiêu CO2 hàng tháng
-    @PutMapping("/me/target")
-    public ResponseEntity<?> updateTarget(@RequestParam @Positive(message = "Điểm mục tiêu phải lớn hơn 0") Double newTarget, Principal principal) {
-        return ResponseEntity.ok(userService.updateCarbonTarget(principal.getName(), newTarget));
+    @PutMapping("/me")
+    public ResponseEntity<?> updateProfile(@Valid @RequestBody UserProfileRequest request, Principal principal) {
+        return ResponseEntity.ok(userService.updateProfile(principal.getName(), request));
     }
 
     @PutMapping("/me/password")

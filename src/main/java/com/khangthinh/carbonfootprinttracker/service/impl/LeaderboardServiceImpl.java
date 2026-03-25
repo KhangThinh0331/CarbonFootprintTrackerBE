@@ -42,7 +42,7 @@ public class LeaderboardServiceImpl implements LeaderboardService {
 
             leaderboard.add(LeaderboardResponse.builder()
                     .rank(rank)
-                    .username(row.getUsername())
+                    .fullName(row.getFullName())
                     .avatarUrl(row.getAvatarUrl())
                     .totalCo2(row.getTotalCo2())
                     .badge(badge)

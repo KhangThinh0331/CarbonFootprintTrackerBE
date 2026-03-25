@@ -1,9 +1,11 @@
 package com.khangthinh.carbonfootprinttracker.service.impl;
 
 import com.khangthinh.carbonfootprinttracker.dto.ChangePasswordRequest;
+import com.khangthinh.carbonfootprinttracker.dto.UserProfileRequest;
 import com.khangthinh.carbonfootprinttracker.dto.UserProfileResponse;
 import com.khangthinh.carbonfootprinttracker.entity.User;
 import com.khangthinh.carbonfootprinttracker.mapper.UserMapper;
+import com.khangthinh.carbonfootprinttracker.mapper.UserProfileMapper;
 import com.khangthinh.carbonfootprinttracker.repository.UserRepository;
 import com.khangthinh.carbonfootprinttracker.service.UserService;
 import jakarta.transaction.Transactional;
@@ -17,6 +19,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final UserProfileMapper userProfileMapper;
 
     @Override
     public UserProfileResponse getUserProfile(String username) {
@@ -28,10 +31,10 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User updateCarbonTarget(String username, Double newTarget) {
+    public User updateProfile(String username, UserProfileRequest request) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-        user.setTargetCo2Month(newTarget);
+        userProfileMapper.updateUserFromRequest(request, user);
         return userRepository.save(user);
     }
 

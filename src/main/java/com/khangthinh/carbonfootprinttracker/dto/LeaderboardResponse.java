@@ -7,7 +7,7 @@ import lombok.Data;
 @Builder
 public class LeaderboardResponse {
     private int rank;
-    private String username;
+    private String fullName;
     private String avatarUrl;
     private Double totalCo2;
     private String badge;

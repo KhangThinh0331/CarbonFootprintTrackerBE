@@ -1,7 +1,7 @@
 package com.khangthinh.carbonfootprinttracker.repository;
 
 public interface LeaderboardProjection {
-    String getUsername();
+    String getFullName();
     String getAvatarUrl();
     Double getTotalCo2();
 }

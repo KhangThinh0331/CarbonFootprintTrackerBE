@@ -41,7 +41,7 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
             @Param("startDate") LocalDateTime startDate
     );
 
-    @Query("SELECT a.user.username as username, a.user.avatarUrl as avatarUrl, SUM(a.totalCo2) as totalCo2 " +
+    @Query("SELECT a.user.fullName as fullName, a.user.avatarUrl as avatarUrl, SUM(a.totalCo2) as totalCo2 " +
             "FROM ActivityLog a " +
             "WHERE a.loggedAt >= :startOfMonth AND a.loggedAt <= :endOfMonth " +
             "GROUP BY a.user.username " +
