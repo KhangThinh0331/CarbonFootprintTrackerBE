@@ -9,7 +9,9 @@ public class ActivityLogResponse {
     private String username;           // Lấy từ User entity
     private String categoryName;       // Lấy từ EmissionFactor -> Category
     private String activityName;       // Lấy từ EmissionFactor
+    private String unit;
     private Double quantity;
     private Double totalCo2;
+    private String note;
     private LocalDateTime loggedAt;
 }

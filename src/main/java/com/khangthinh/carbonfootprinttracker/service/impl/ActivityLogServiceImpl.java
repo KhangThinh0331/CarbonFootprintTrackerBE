@@ -35,6 +35,7 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 
     // 1. Ghi nhận hoạt động mới và tính toán CO2
     @Transactional
+    @Override
     public ActivityLog logActivity(String username, Long factorId, Double quantity, String note) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy User"));
@@ -58,19 +59,19 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 
     // 2. Lấy lịch sử của user (Dùng cho Next.js hiển thị Dashboard)
     @Override
-    public Page<ActivityLogResponse> getUserLogs(String username, Pageable pageable) {
+    public Page<ActivityLogResponse> getUserLogs(String username, Integer month, Integer year, Pageable pageable) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy User"));
 
-        Page<ActivityLog> logs = activityLogRepository.findByUser(user, pageable);
+        Page<ActivityLog> logs = activityLogRepository.findByUserAndMonthAndYear(user, month, year, pageable);
 
         // Map list Entity sang list DTO tự động
         return logs.map(activityLogMapper::toResponseDto);
     }
 
     @Override
-    public Double getTotalCo2(String username) {
-        Double total = activityLogRepository.sumCo2ByUsername(username);
+    public Double getTotalCo2(String username, Integer month, Integer year) {
+        Double total = activityLogRepository.sumCo2ByUsername(username, month, year);
         return total != null ? total : 0.0;
     }
 

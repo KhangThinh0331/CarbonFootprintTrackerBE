@@ -36,14 +36,15 @@ public class ActivityLogController {
 
     // 2. Lấy lịch sử của người dùng đang đăng nhập
     @GetMapping
-    public ResponseEntity<?> getMyLogs(Principal principal, @PageableDefault(size = 20, page = 0, sort = "loggedAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        // Nếu bạn đã cài đặt MapStruct, service này sẽ trả về List<ActivityLogResponse>
-        return ResponseEntity.ok(activityLogService.getUserLogs(principal.getName(), pageable));
+    public ResponseEntity<?> getMyLogs(Principal principal, @RequestParam(required = false) Integer month,
+                                       @RequestParam(required = false) Integer year, @PageableDefault(size = 20, page = 0, sort = "loggedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(activityLogService.getUserLogs(principal.getName(), month, year, pageable));
     }
 
     @GetMapping("/total-co2")
-    public ResponseEntity<Double> getTotalCo2(Principal principal) {
-        return ResponseEntity.ok(activityLogService.getTotalCo2(principal.getName()));
+    public ResponseEntity<Double> getTotalCo2(Principal principal, @RequestParam(required = false) Integer month,
+                                              @RequestParam(required = false) Integer year) {
+        return ResponseEntity.ok(activityLogService.getTotalCo2(principal.getName(), month, year));
     }
 
     @GetMapping("/chart-data")

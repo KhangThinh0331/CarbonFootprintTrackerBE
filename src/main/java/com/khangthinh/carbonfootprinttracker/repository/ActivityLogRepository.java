@@ -14,10 +14,22 @@ import java.util.List;
 
 @Repository
 public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> {
-    Page<ActivityLog> findByUser(User user, Pageable pageable);
+    @Query("SELECT a FROM ActivityLog a WHERE a.user = :user " +
+            "AND (:month IS NULL OR FUNCTION('MONTH', a.loggedAt) = :month) " +
+            "AND (:year IS NULL OR FUNCTION('YEAR', a.loggedAt) = :year)")
+    Page<ActivityLog> findByUserAndMonthAndYear(
+            @Param("user") User user,
+            @Param("month") Integer month,
+            @Param("year") Integer year,
+            Pageable pageable
+    );
 
-    @Query("SELECT SUM(a.totalCo2) FROM ActivityLog a WHERE a.user.username = :username")
-    Double sumCo2ByUsername(@Param("username") String username);
+    @Query("SELECT SUM(a.totalCo2) FROM ActivityLog a WHERE a.user.username = :username " +
+            "AND (:month IS NULL OR FUNCTION('MONTH', a.loggedAt) = :month) " +
+            "AND (:year IS NULL OR FUNCTION('YEAR', a.loggedAt) = :year)")
+    Double sumCo2ByUsername(@Param("username") String username,
+                            @Param("month") Integer month,
+                            @Param("year") Integer year);
 
     @Query("SELECT CAST(a.loggedAt AS date) as logDate, SUM(a.totalCo2) as totalCo2 " +
             "FROM ActivityLog a " +
@@ -27,5 +39,16 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
     List<DailyCo2Projection> sumCo2ByDateForLast7Days(
             @Param("username") String username,
             @Param("startDate") LocalDateTime startDate
+    );
+
+    @Query("SELECT a.user.username as username, a.user.avatarUrl as avatarUrl, SUM(a.totalCo2) as totalCo2 " +
+            "FROM ActivityLog a " +
+            "WHERE a.loggedAt >= :startOfMonth AND a.loggedAt <= :endOfMonth " +
+            "GROUP BY a.user.username " +
+            "ORDER BY SUM(a.totalCo2) ASC")
+    List<LeaderboardProjection> getMonthlyLeaderboard(
+            @Param("startOfMonth") LocalDateTime startOfMonth,
+            @Param("endOfMonth") LocalDateTime endOfMonth,
+            Pageable pageable
     );
 }

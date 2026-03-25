@@ -1,6 +1,6 @@
 package com.khangthinh.carbonfootprinttracker.controller;
 
-import com.khangthinh.carbonfootprinttracker.entity.User;
+import com.khangthinh.carbonfootprinttracker.dto.UserProfileResponse;
 import com.khangthinh.carbonfootprinttracker.service.UserChallengeService;
 import com.khangthinh.carbonfootprinttracker.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class UserChallengeController {
     @PutMapping("/{challengeId}/complete")
     public ResponseEntity<?> completeChallenge(@PathVariable Long challengeId, Principal principal) {
             // Lấy User ID từ Username trong Token
-            User user = userService.getUserProfile(principal.getName());
+            UserProfileResponse user = userService.getUserProfile(principal.getName());
 
             // Gọi hàm cộng điểm trong Service
             userChallengeService.completeChallenge(user.getId(), challengeId);

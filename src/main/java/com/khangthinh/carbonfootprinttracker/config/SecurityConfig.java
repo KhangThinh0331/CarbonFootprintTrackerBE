@@ -1,7 +1,9 @@
 package com.khangthinh.carbonfootprinttracker.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.khangthinh.carbonfootprinttracker.service.impl.UserDetailsServiceImpl;
 import com.khangthinh.carbonfootprinttracker.util.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +23,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -56,8 +60,34 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Bật CORS cho Next.js
                 .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF vì dùng JWT (Stateless)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception -> exception
+                        // Trả về 401 Unauthorized khi Token sai/thiếu
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            Map<String, Object> data = new HashMap<>();
+                            data.put("error", "Unauthorized");
+                            data.put("message", "Vui lòng đăng nhập để thực hiện hành động này");
+
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+                            // Dùng ObjectMapper để convert Map sang JSON string
+                            new ObjectMapper().writeValue(response.getOutputStream(), data);
+                        })
+                        // Trả về 403 Forbidden khi sai quyền (Role)
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            Map<String, Object> data = new HashMap<>();
+                            data.put("error", "Forbidden");
+                            data.put("message", "Bạn không có quyền thực hiện hành động này");
+
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+
+                            // Dùng ObjectMapper để convert Map sang JSON string
+                            new ObjectMapper().writeValue(response.getOutputStream(), data);
+                        })
+                )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // Cho phép đăng nhập/đăng ký không cần token
+                        .requestMatchers("/api/auth/**", "/api/leaderboard/monthly").permitAll() // Cho phép đăng nhập/đăng ký không cần token
                         .anyRequest().authenticated() // Các API còn lại bắt buộc phải có Token hợp lệ
                 );
 

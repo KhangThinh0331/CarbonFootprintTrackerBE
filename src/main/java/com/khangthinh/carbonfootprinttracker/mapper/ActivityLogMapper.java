@@ -13,6 +13,7 @@ public interface ActivityLogMapper {
     @Mapping(source = "user.username", target = "username")
     @Mapping(source = "emissionFactor.category.name", target = "categoryName")
     @Mapping(source = "emissionFactor.activityName", target = "activityName")
+    @Mapping(source = "emissionFactor.unit", target = "unit")
     ActivityLogResponse toResponseDto(ActivityLog activityLog);
 
 }

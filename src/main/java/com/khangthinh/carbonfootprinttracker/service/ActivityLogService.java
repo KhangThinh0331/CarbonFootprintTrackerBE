@@ -11,9 +11,9 @@ import java.util.List;
 public interface ActivityLogService {
     ActivityLog logActivity(String username, Long factorId, Double quantity, String note);
 
-    Page<ActivityLogResponse> getUserLogs(String username, Pageable pageable);
+    Page<ActivityLogResponse> getUserLogs(String username, Integer month, Integer year, Pageable pageable);
 
-    Double getTotalCo2(String username);
+    Double getTotalCo2(String username, Integer month, Integer year);
 
     List<ChartDataResponse> getChartDataLast7Days(String username);
 }
