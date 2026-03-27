@@ -2,7 +2,7 @@ package com.khangthinh.carbonfootprinttracker.controller;
 
 import com.khangthinh.carbonfootprinttracker.dto.*;
 import com.khangthinh.carbonfootprinttracker.service.AuthService;
-import com.khangthinh.carbonfootprinttracker.util.JwtUtils;
+import com.khangthinh.carbonfootprinttracker.util.TokenService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -23,7 +23,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final AuthenticationManager authenticationManager;
-    private final JwtUtils jwtUtils;
+    private final TokenService tokenService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
@@ -33,7 +33,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        // Spring Security sẽ tự động kiểm tra username và password mã hóa
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
@@ -43,7 +42,7 @@ public class AuthController {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String jwt = jwtUtils.generateJwtToken(authentication);
+        String jwt = tokenService.generateJwtToken(authentication);
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
@@ -85,7 +84,6 @@ public class AuthController {
 
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> googleLogin(@RequestBody GoogleLoginRequest request) {
-            // Gọi Service và nhận về object đầy đủ
             AuthResponse response = authService.loginWithGoogle(request.getIdToken());
             return ResponseEntity.ok(response);
     }

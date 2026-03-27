@@ -1,13 +1,18 @@
 package com.khangthinh.carbonfootprinttracker.util;
 
+import com.khangthinh.carbonfootprinttracker.entity.Goal;
 import com.khangthinh.carbonfootprinttracker.entity.OtpToken;
+import com.khangthinh.carbonfootprinttracker.repository.GoalRepository;
 import com.khangthinh.carbonfootprinttracker.repository.OtpTokenRepository;
 import com.khangthinh.carbonfootprinttracker.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -16,6 +21,8 @@ public class CleanupTask {
     private final UserRepository userRepository;
 
     private final OtpTokenRepository otpTokenRepository;
+
+    private final GoalRepository goalRepository;
 
     // Chạy vào 2 giờ sáng mỗi ngày (Cron expression: Giây Phút Giờ Ngày Tháng Thứ)
     @Scheduled(cron = "0 0 2 * * *")
@@ -30,5 +37,25 @@ public class CleanupTask {
         otpTokenRepository.deleteByTypeAndLastSentAtBefore(OtpToken.OtpType.FORGOT_PASSWORD, threshold);
 
         System.out.println("Đã dọn dẹp các tài khoản và mã otp rác lúc: " + LocalDateTime.now());
+    }
+
+    @Scheduled(cron = "0 0 0 * * *") // Chạy vào 00:00 mỗi ngày
+    @Transactional
+    public void checkExpiredGoals() {
+        List<Goal> expiredGoals = goalRepository.findAllByStatusAndDeadlineBefore(
+                Goal.GoalStatus.IN_PROGRESS, LocalDate.now()
+        );
+
+        for (Goal goal : expiredGoals) {
+            if (goal.getCurrentValue() <= goal.getTargetValue()) {
+                goal.setStatus(Goal.GoalStatus.COMPLETED);
+            } else {
+                goal.setStatus(Goal.GoalStatus.FAILED);
+            }
+        }
+
+        if (!expiredGoals.isEmpty()) {
+            goalRepository.saveAll(expiredGoals);
+        }
     }
 }

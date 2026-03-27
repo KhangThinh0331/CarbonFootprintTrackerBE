@@ -2,9 +2,10 @@ package com.khangthinh.carbonfootprinttracker.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.khangthinh.carbonfootprinttracker.service.impl.UserDetailsServiceImpl;
-import com.khangthinh.carbonfootprinttracker.util.JwtAuthenticationFilter;
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,12 +18,20 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +43,9 @@ import java.util.Map;
 public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
-    private final JwtAuthenticationFilter jwtAuthFilter;
+
+    @Value("${app.jwt.secret}")
+    private String jwtSecret;
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
@@ -60,50 +71,69 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Bật CORS cho Next.js
                 .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF vì dùng JWT (Stateless)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(exception -> exception
-                        // Trả về 401 Unauthorized khi Token sai/thiếu
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**", "/api/leaderboard/monthly").permitAll()
+                        .anyRequest().authenticated()
+                )
+                // CẤU HÌNH OAUTH2 RESOURCE SERVER TẠI ĐÂY
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .decoder(jwtDecoder())
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                        )
                         .authenticationEntryPoint((request, response, authException) -> {
+                            // Xử lý lỗi 401: Token sai/hết hạn/không có
                             Map<String, Object> data = new HashMap<>();
                             data.put("error", "Unauthorized");
-                            data.put("message", "Vui lòng đăng nhập để thực hiện hành động này");
-
+                            data.put("message", "Vui lòng đăng nhập hoặc token không hợp lệ");
                             response.setContentType("application/json;charset=UTF-8");
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-
-                            // Dùng ObjectMapper để convert Map sang JSON string
                             new ObjectMapper().writeValue(response.getOutputStream(), data);
                         })
-                        // Trả về 403 Forbidden khi sai quyền (Role)
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            // Xử lý lỗi 403: Không đủ quyền
                             Map<String, Object> data = new HashMap<>();
                             data.put("error", "Forbidden");
                             data.put("message", "Bạn không có quyền thực hiện hành động này");
-
                             response.setContentType("application/json;charset=UTF-8");
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-
-                            // Dùng ObjectMapper để convert Map sang JSON string
                             new ObjectMapper().writeValue(response.getOutputStream(), data);
                         })
-                )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/leaderboard/monthly").permitAll() // Cho phép đăng nhập/đăng ký không cần token
-                        .anyRequest().authenticated() // Các API còn lại bắt buộc phải có Token hợp lệ
                 );
 
         http.authenticationProvider(authenticationProvider());
 
-        // Chèn JwtFilter vào trước Filter mặc định của Spring Security
-        http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        SecretKey secretKey = new SecretKeySpec(jwtSecret.getBytes(), "HmacSHA256");
+        return NimbusJwtDecoder.withSecretKey(secretKey).macAlgorithm(MacAlgorithm.HS256).build();
+    }
+
+    @Bean
+    public JwtEncoder jwtEncoder() {
+        SecretKey secretKey = new SecretKeySpec(jwtSecret.getBytes(), "HmacSHA256");
+        return new NimbusJwtEncoder(new ImmutableSecret<>(secretKey));
+    }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
+        grantedAuthoritiesConverter.setAuthorityPrefix("");
+
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+        return jwtAuthenticationConverter;
     }
 
     // Cấu hình CORS để Next.js (cổng 3000) có thể gọi API
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Tên miền của Next.js
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);

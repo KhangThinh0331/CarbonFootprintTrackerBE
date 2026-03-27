@@ -41,14 +41,21 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
             @Param("startDate") LocalDateTime startDate
     );
 
-    @Query("SELECT a.user.fullName as fullName, a.user.avatarUrl as avatarUrl, SUM(a.totalCo2) as totalCo2 " +
-            "FROM ActivityLog a " +
-            "WHERE a.loggedAt >= :startOfMonth AND a.loggedAt <= :endOfMonth " +
-            "GROUP BY a.user.username " +
-            "ORDER BY SUM(a.totalCo2) ASC")
+    @Query(value = "SELECT * FROM (" +
+            "  SELECT u.full_name as fullName, u.avatar_url as avatarUrl, SUM(a.total_co2) as totalCo2, " +
+            "  RANK() OVER (ORDER BY SUM(a.total_co2) ASC) as realRank " +
+            "  FROM activity_logs a " +
+            "  JOIN users u ON a.user_id = u.id " +
+            "  WHERE a.logged_at >= :startOfMonth AND a.logged_at <= :endOfMonth " +
+            "  GROUP BY u.username, u.full_name, u.avatar_url" +
+            ") AS ranked_list " +
+            "WHERE (:fullName IS NULL OR LOWER(fullName) LIKE LOWER(CONCAT('%', :fullName, '%'))) " +
+            "ORDER BY totalCo2 ASC",
+            nativeQuery = true)
     List<LeaderboardProjection> getMonthlyLeaderboard(
             @Param("startOfMonth") LocalDateTime startOfMonth,
             @Param("endOfMonth") LocalDateTime endOfMonth,
+            @Param("fullName") String fullName,
             Pageable pageable
     );
 }

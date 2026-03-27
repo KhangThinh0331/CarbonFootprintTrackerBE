@@ -41,7 +41,15 @@ public class Goal {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate deadline;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private GoalStatus status;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    public enum GoalStatus {
+        IN_PROGRESS, COMPLETED, FAILED
+    }
 }

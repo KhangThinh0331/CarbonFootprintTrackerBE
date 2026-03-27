@@ -15,7 +15,7 @@ import com.khangthinh.carbonfootprinttracker.repository.RoleRepository;
 import com.khangthinh.carbonfootprinttracker.repository.UserRepository;
 import com.khangthinh.carbonfootprinttracker.service.AuthService;
 import com.khangthinh.carbonfootprinttracker.service.EmailService;
-import com.khangthinh.carbonfootprinttracker.util.JwtUtils;
+import com.khangthinh.carbonfootprinttracker.util.TokenService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,7 +42,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtils jwtUtils;
+    private final TokenService tokenService;
     private final OtpTokenRepository otpTokenRepository;
     private final EmailService emailService;
 
@@ -376,7 +376,7 @@ public class AuthServiceImpl implements AuthService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             // 6. Cấp phát JWT của hệ thống chúng ta
-            String jwt = jwtUtils.generateJwtToken(authentication);
+            String jwt = tokenService.generateJwtToken(authentication);
 
             // TRẢ VỀ ĐỐI TƯỢNG ĐẦY ĐỦ
             AuthResponse response = new AuthResponse();

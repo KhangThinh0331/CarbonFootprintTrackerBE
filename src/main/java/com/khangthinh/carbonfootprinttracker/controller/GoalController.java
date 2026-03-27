@@ -1,5 +1,6 @@
 package com.khangthinh.carbonfootprinttracker.controller;
 
+import com.khangthinh.carbonfootprinttracker.dto.GoalResponse;
 import com.khangthinh.carbonfootprinttracker.entity.Goal;
 import com.khangthinh.carbonfootprinttracker.service.GoalService;
 import jakarta.validation.Valid;
@@ -23,8 +24,8 @@ public class GoalController {
 
     // Lấy danh sách mục tiêu của người dùng hiện tại
     @GetMapping
-    public ResponseEntity<?> getMyGoals(Principal principal, @PageableDefault(size = 20, page = 0) Pageable pageable) {
-        return ResponseEntity.ok(goalService.getUserGoals(principal.getName(), pageable));
+    public ResponseEntity<?> getMyGoals(Principal principal, @RequestParam(required = false) Goal.GoalStatus status, @PageableDefault(size = 5, page = 0) Pageable pageable) {
+        return ResponseEntity.ok(goalService.getUserGoals(principal.getName(), status, pageable));
     }
 
     // Tạo mục tiêu mới
@@ -39,7 +40,7 @@ public class GoalController {
     public ResponseEntity<?> updateProgress(
             @PathVariable Long goalId,
             @RequestParam @Positive(message = "Giá trị cộng thêm phải lớn hơn 0") Double addedValue) {
-            Goal updatedGoal = goalService.updateGoalProgress(goalId, addedValue);
+            GoalResponse updatedGoal = goalService.updateGoalProgress(goalId, addedValue);
             return ResponseEntity.ok(updatedGoal);
     }
 }
