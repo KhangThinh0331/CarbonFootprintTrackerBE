@@ -17,13 +17,11 @@ public class ChallengeController {
 
     private final ChallengeService challengeService;
 
-    // Ai đã đăng nhập cũng có thể xem danh sách thử thách
     @GetMapping
     public ResponseEntity<?> getAllChallenges(@PageableDefault(size = 20, page = 0) Pageable pageable) {
         return ResponseEntity.ok(challengeService.getAllChallenges(pageable));
     }
 
-    // Phân quyền: Chỉ có ROLE_ADMIN mới được gọi API này
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createChallenge(@Valid @RequestBody Challenge challenge) {

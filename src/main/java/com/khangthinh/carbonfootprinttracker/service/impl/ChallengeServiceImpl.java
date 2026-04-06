@@ -13,13 +13,11 @@ import org.springframework.stereotype.Service;
 public class ChallengeServiceImpl implements ChallengeService {
     private final ChallengeRepository challengeRepository;
 
-    // Lấy danh sách tất cả thử thách để hiển thị lên giao diện
     @Override
     public Page<Challenge> getAllChallenges(Pageable pageable) {
         return challengeRepository.findAll(pageable);
     }
 
-    // Chỉ Admin mới được dùng hàm này (Sẽ chặn ở Controller bằng @PreAuthorize)
     @Override
     public Challenge createChallenge(Challenge challenge) {
         return challengeRepository.save(challenge);

@@ -53,10 +53,15 @@ public class Challenge {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate endDate;
 
+    @NotNull(message = "Mục tiêu CO2 không được để trống")
+    @Positive(message = "Mục tiêu CO2 phải lớn hơn 0")
+    @Column(name = "target_co2")
+    private Double targetCo2;
+
     @AssertTrue(message = "Ngày kết thúc phải sau ngày bắt đầu")
     private boolean isValidDateRange() {
         if (startDate == null || endDate == null) {
-            return true; // Để @NotNull xử lý
+            return true;
         }
         return startDate.isBefore(endDate) || startDate.isEqual(endDate);
     }

@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -323,37 +322,31 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse loginWithGoogle(String idTokenString) {
         try {
-            // 1. Khởi tạo công cụ xác minh của Google
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
                     .setAudience(Collections.singletonList(googleClientId))
                     .build();
 
-            // 2. Xác minh Token
             GoogleIdToken idToken = verifier.verify(idTokenString);
             if (idToken == null) {
                 throw new RuntimeException("Token Google không hợp lệ!");
             }
 
-            // 3. Lấy thông tin từ Google
             GoogleIdToken.Payload payload = idToken.getPayload();
             String email = payload.getEmail();
             String name = (String) payload.get("name");
             String pictureUrl = (String) payload.get("picture");
 
-            // 4. Kiểm tra User trong Database
             User user = userRepository.findByEmail(email).orElse(null);
 
             if (user == null) {
-                // Nếu User chưa tồn tại -> Tự động Đăng ký (Auto-Provisioning)
                 Role userRole = roleRepository.findByName("ROLE_USER")
                         .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy Role."));
 
                 user = User.builder()
-                        .username(email) // Dùng email làm username luôn cho tiện
+                        .username(email)
                         .email(email)
                         .fullName(name)
                         .avatarUrl(pictureUrl)
-                        // Tạo một mật khẩu ngẫu nhiên rất dài để không ai (kể cả user) có thể dùng nó để login thường
                         .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                         .targetCo2Month(50.0)
                         .isActive(true)
@@ -362,7 +355,6 @@ public class AuthServiceImpl implements AuthService {
                 userRepository.save(user);
             }
 
-            // 5. Tạo Authentication cho Spring Security hiểu
             List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
                     .map(role -> new SimpleGrantedAuthority(role.getName()))
                     .collect(Collectors.toList());
@@ -373,12 +365,8 @@ public class AuthServiceImpl implements AuthService {
             Authentication authentication = new UsernamePasswordAuthenticationToken(
                     userDetails, null, authorities);
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            // 6. Cấp phát JWT của hệ thống chúng ta
             String jwt = tokenService.generateJwtToken(authentication);
 
-            // TRẢ VỀ ĐỐI TƯỢNG ĐẦY ĐỦ
             AuthResponse response = new AuthResponse();
             response.setToken(jwt);
             response.setUsername(user.getUsername()); // Đã có username ở đây!

@@ -39,7 +39,7 @@ public class UserChallengeServiceImpl implements UserChallengeService {
         UserChallenge userChallenge = UserChallenge.builder()
                 .user(user)
                 .challenge(challenge)
-                .status(UserChallenge.ChallengeStatus.IN_PROGRESS) // Có thể dùng Enum ở đây
+                .status(UserChallenge.ChallengeStatus.IN_PROGRESS)
                 .build();
 
         return userChallengeRepository.save(userChallenge);
