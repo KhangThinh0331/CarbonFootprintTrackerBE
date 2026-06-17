@@ -20,21 +20,21 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 1. Xử lý các lỗi logic nghiệp vụ do chúng ta chủ động ném ra (RuntimeException)
+    // Xử lý các lỗi logic nghiệp vụ chủ động ném ra (RuntimeException)
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex, WebRequest request) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value()) // HTTP 400
                 .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
-                .message(ex.getMessage()) // Lấy message từ throw new RuntimeException("...")
+                .message(ex.getMessage())
                 .path(request.getDescription(false).replace("uri=", ""))
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    // 2. Xử lý lỗi không tìm thấy tài nguyên (Ví dụ: truyền sai ID)
+    // Xử lý lỗi không tìm thấy tài nguyên (Ví dụ: truyền sai ID)
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
         ErrorResponse errorResponse = ErrorResponse.builder()
@@ -72,18 +72,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, status);
     }
 
-    // 3. Xử lý CẤP ĐỘ CAO NHẤT: Bắt tất cả các lỗi chưa được lường trước (Lỗi Server)
+    // Xử lý CẤP ĐỘ CAO NHẤT: Bắt tất cả các lỗi chưa được lường trước (Lỗi Server)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
-
-        // Log lỗi ra console để dev biết đường sửa (có thể dùng Slf4j)
         ex.printStackTrace();
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value()) // HTTP 500
                 .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
-                .message("Đã xảy ra lỗi hệ thống. Vui lòng liên hệ Admin!") // Giấu chi tiết lỗi thật đi để bảo mật
+                .message("Đã xảy ra lỗi hệ thống. Vui lòng liên hệ Admin!")
                 .path(request.getDescription(false).replace("uri=", ""))
                 .build();
 
@@ -100,7 +98,7 @@ public class GlobalExceptionHandler {
 
         // lấy tất cả lỗi
         ex.getConstraintViolations().forEach(v -> {
-            String field = v.getPropertyPath().toString(); // vd: forgotPassword.email
+            String field = v.getPropertyPath().toString();
             String message = v.getMessage();
             errors.put(field, message);
         });
@@ -120,15 +118,13 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
-    // 4. Xử lý lỗi Validation (Dữ liệu đầu vào không hợp lệ)
+    // Xử lý lỗi Validation (Dữ liệu đầu vào không hợp lệ)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
-
-        // Trích xuất tất cả các lỗi từ Exception
         ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField(); // Tên trường (vd: quantity)
-            String errorMessage = error.getDefaultMessage();    // Lời nhắn (vd: Số lượng không được là số âm)
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
 
@@ -140,7 +136,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST.value()) // HTTP 400
                 .error("Validation Failed")
                 .message(firstErrorMessage)
-                .validationErrors(errors) // Đưa danh sách lỗi vào đây
+                .validationErrors(errors)
                 .path(request.getDescription(false).replace("uri=", ""))
                 .build();
 

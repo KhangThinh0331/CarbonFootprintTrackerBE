@@ -21,18 +21,12 @@ public class LeaderboardServiceImpl implements LeaderboardService {
     private final ActivityLogRepository activityLogRepository;
 
     @Override
-    public List<LeaderboardResponse> getCurrentMonthLeaderboard(String fullName) {
-        // 1. Xác định ngày đầu tháng và cuối tháng hiện tại
-        LocalDate now = LocalDate.now();
-        LocalDateTime startOfMonth = now.withDayOfMonth(1).atStartOfDay();
-        LocalDateTime endOfMonth = now.withDayOfMonth(now.lengthOfMonth()).atTime(LocalTime.MAX);
+    public List<LeaderboardResponse> getLeaderboard(String fullName) {
 
         String nameParam = (fullName != null && !fullName.trim().isEmpty()) ? fullName : null;
 
-        // 2. Kéo dữ liệu từ DB (Đã được sắp xếp ASC)
-        List<LeaderboardProjection> rawData = activityLogRepository.getMonthlyLeaderboard(startOfMonth, endOfMonth, nameParam, PageRequest.of(0, 100));
+        List<LeaderboardProjection> rawData = activityLogRepository.getMonthlyLeaderboard(nameParam, PageRequest.of(0, 100));
 
-        // 3. Gán Rank và Badge
         return rawData.stream().map(row -> {
             int rank = row.getRealRank();
 

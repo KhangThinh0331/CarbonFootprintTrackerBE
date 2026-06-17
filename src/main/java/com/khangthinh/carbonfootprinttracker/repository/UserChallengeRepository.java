@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Repository
 public interface UserChallengeRepository extends JpaRepository<UserChallenge, UserChallengeId> {
@@ -22,4 +23,6 @@ public interface UserChallengeRepository extends JpaRepository<UserChallenge, Us
             "WHERE uc.status = com.khangthinh.carbonfootprinttracker.entity.UserChallenge.ChallengeStatus.IN_PROGRESS " +
             "AND uc.challenge.endDate < :now")
     int updateFailedChallenges(@Param("now") LocalDate now);
+
+    Optional<UserChallenge> findByUserAndChallenge(User user, Challenge challenge);
 }

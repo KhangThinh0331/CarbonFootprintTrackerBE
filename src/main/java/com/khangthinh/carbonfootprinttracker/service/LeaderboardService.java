@@ -5,5 +5,5 @@ import com.khangthinh.carbonfootprinttracker.dto.LeaderboardResponse;
 import java.util.List;
 
 public interface LeaderboardService {
-    List<LeaderboardResponse> getCurrentMonthLeaderboard(String fullName);
+    List<LeaderboardResponse> getLeaderboard(String fullName);
 }

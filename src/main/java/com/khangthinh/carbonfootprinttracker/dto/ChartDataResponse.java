@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChartDataResponse {
-    private String name; // Sẽ chứa ngày (VD: "12/03" hoặc "T2")
-    private Double co2;  // Tổng CO2 trong ngày
+    private String name;
+    private Double co2;
 }

@@ -33,7 +33,6 @@ public class ActivityLogServiceImpl implements ActivityLogService {
     private final UserRepository userRepository;
     private final ActivityLogMapper activityLogMapper;
 
-    // 1. Ghi nhận hoạt động mới và tính toán CO2
     @Transactional
     @Override
     public ActivityLog logActivity(String username, Long factorId, Double quantity, String note) {
@@ -43,7 +42,6 @@ public class ActivityLogServiceImpl implements ActivityLogService {
         EmissionFactor factor = emissionFactorRepository.findById(factorId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy Hệ số phát thải"));
 
-        // Logic cốt lõi: Tính toán CO2
         Double calculatedCo2 = quantity * factor.getCo2PerUnit();
 
         ActivityLog log = ActivityLog.builder()
@@ -57,7 +55,6 @@ public class ActivityLogServiceImpl implements ActivityLogService {
         return activityLogRepository.save(log);
     }
 
-    // 2. Lấy lịch sử của user (Dùng cho Next.js hiển thị Dashboard)
     @Override
     public Page<ActivityLogResponse> getUserLogs(String username, Integer month, Integer year, Pageable pageable) {
         User user = userRepository.findByUsername(username)
@@ -65,7 +62,6 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 
         Page<ActivityLog> logs = activityLogRepository.findByUserAndMonthAndYear(user, month, year, pageable);
 
-        // Map list Entity sang list DTO tự động
         return logs.map(activityLogMapper::toResponseDto);
     }
 
@@ -77,27 +73,20 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 
     @Override
     public List<ChartDataResponse> getChartDataLast7Days(String username) {
-        // Lấy mốc thời gian: 00:00:00 của 6 ngày trước (Cộng hôm nay nữa là 7 ngày)
         LocalDateTime startDate = LocalDateTime.now().minusDays(6).withHour(0).withMinute(0).withSecond(0);
-
-        // 1. Kéo dữ liệu thô từ Database
         List<DailyCo2Projection> dbData = activityLogRepository.sumCo2ByDateForLast7Days(username, startDate);
 
-        // 2. Ép vào Map để tra cứu cực nhanh: Map<LocalDate, Double>
         Map<LocalDate, Double> dataMap = dbData.stream()
                 .collect(Collectors.toMap(
                         proj -> proj.getLogDate().toLocalDate(),
                         DailyCo2Projection::getTotalCo2
                 ));
 
-        // 3. Khởi tạo danh sách kết quả trả về
         List<ChartDataResponse> result = new ArrayList<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM"); // Định dạng ngày: 22/03
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM");
 
-        // 4. Lặp 7 ngày (từ 6 ngày trước -> hôm nay)
         for (int i = 6; i >= 0; i--) {
             LocalDate date = LocalDate.now().minusDays(i);
-            // Lấy giá trị trong Map ra, nếu ngày đó không có nhập thì lấy 0.0
             Double co2 = dataMap.getOrDefault(date, 0.0);
 
             result.add(new ChartDataResponse(date.format(formatter), co2));

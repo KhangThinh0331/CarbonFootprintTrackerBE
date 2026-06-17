@@ -21,20 +21,16 @@ public class ActivityLogController {
 
     private final ActivityLogService activityLogService;
 
-    // 1. Lưu nhật ký mới
     @PostMapping
     public ResponseEntity<?> logActivity(@Valid @RequestBody ActivityLogRequest request, Principal principal) {
-            // principal.getName() sẽ trả về username (hoặc email) lấy từ JWT Token
             String username = principal.getName();
 
-            // Gọi service xử lý
             var log = activityLogService.logActivity(
                     username, request.getFactorId(), request.getQuantity(), request.getNote()
             );
             return ResponseEntity.ok(log);
     }
 
-    // 2. Lấy lịch sử của người dùng đang đăng nhập
     @GetMapping
     public ResponseEntity<?> getMyLogs(Principal principal, @RequestParam(required = false) Integer month,
                                        @RequestParam(required = false) Integer year, @PageableDefault(size = 20, page = 0, sort = "loggedAt", direction = Sort.Direction.DESC) Pageable pageable) {

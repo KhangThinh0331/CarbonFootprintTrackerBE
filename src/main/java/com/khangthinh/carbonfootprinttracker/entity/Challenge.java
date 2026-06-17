@@ -1,10 +1,7 @@
 package com.khangthinh.carbonfootprinttracker.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -53,10 +51,8 @@ public class Challenge {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate endDate;
 
-    @NotNull(message = "Mục tiêu CO2 không được để trống")
-    @Positive(message = "Mục tiêu CO2 phải lớn hơn 0")
-    @Column(name = "target_co2")
-    private Double targetCo2;
+    @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL)
+    private List<Question> questions;
 
     @AssertTrue(message = "Ngày kết thúc phải sau ngày bắt đầu")
     private boolean isValidDateRange() {

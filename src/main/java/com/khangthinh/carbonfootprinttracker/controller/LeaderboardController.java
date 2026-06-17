@@ -15,8 +15,8 @@ public class LeaderboardController {
 
     private final LeaderboardService leaderboardService;
 
-    @GetMapping("/monthly")
+    @GetMapping
     public ResponseEntity<?> getMonthlyLeaderboard(@RequestParam(required = false) String q) {
-        return ResponseEntity.ok(leaderboardService.getCurrentMonthLeaderboard(q));
+        return ResponseEntity.ok(leaderboardService.getLeaderboard(q));
     }
 }

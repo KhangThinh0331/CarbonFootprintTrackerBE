@@ -17,10 +17,8 @@ import java.util.stream.Collectors;
 public class EmissionFactorServiceImpl implements EmissionFactorService {
     private final EmissionFactorRepository emissionFactorRepository;
     private final CategoryRepository categoryRepository;
-
     private final EmissionFactorMapper emissionFactorMapper;
 
-    // Ví dụ: Lấy tất cả các loại "Phương tiện di chuyển" (CategoryId = 1)
     @Override
     public List<EmissionFactorResponse> getFactorsByCategoryId(Long categoryId) {
         if (!categoryRepository.existsById(categoryId)) {
