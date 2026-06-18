@@ -1,5 +1,7 @@
 package com.khangthinh.carbonfootprinttracker.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,9 +23,11 @@ public class Answer {
     @Column(name = "content", nullable = false)
     private String content;
 
+    @JsonProperty("isCorrect")
     @Column(name = "is_correct")
     private boolean isCorrect;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")
     private Question question;

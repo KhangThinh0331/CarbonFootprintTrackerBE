@@ -1,6 +1,8 @@
 package com.khangthinh.carbonfootprinttracker.service.impl;
 
+import com.khangthinh.carbonfootprinttracker.entity.Answer;
 import com.khangthinh.carbonfootprinttracker.entity.Challenge;
+import com.khangthinh.carbonfootprinttracker.entity.Question;
 import com.khangthinh.carbonfootprinttracker.repository.ChallengeRepository;
 import com.khangthinh.carbonfootprinttracker.service.ChallengeService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,17 @@ public class ChallengeServiceImpl implements ChallengeService {
 
     @Override
     public Challenge createChallenge(Challenge challenge) {
+        if (challenge.getQuestions() != null) {
+            for (Question question : challenge.getQuestions()) {
+                question.setChallenge(challenge);
+
+                if (question.getAnswers() != null) {
+                    for (Answer answer : question.getAnswers()) {
+                        answer.setQuestion(question);
+                    }
+                }
+            }
+        }
         return challengeRepository.save(challenge);
     }
 }

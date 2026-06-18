@@ -1,6 +1,7 @@
 package com.khangthinh.carbonfootprinttracker.controller;
 
 import com.khangthinh.carbonfootprinttracker.dto.QuizResultResponse;
+import com.khangthinh.carbonfootprinttracker.dto.QuizSubmitRequest;
 import com.khangthinh.carbonfootprinttracker.entity.Challenge;
 import com.khangthinh.carbonfootprinttracker.service.ChallengeService;
 import com.khangthinh.carbonfootprinttracker.service.UserChallengeService;
@@ -32,12 +33,5 @@ public class ChallengeController {
     public ResponseEntity<?> createChallenge(@Valid @RequestBody Challenge challenge) {
             Challenge newChallenge = challengeService.createChallenge(challenge);
             return ResponseEntity.ok(newChallenge);
-    }
-
-    @GetMapping("/{id}/result")
-    public ResponseEntity<?> getChallengeResult(@PathVariable("id") Long challengeId, Principal principal) {
-        String username = principal.getName();
-        QuizResultResponse response = userChallengeService.getQuizResult(username, challengeId);
-        return ResponseEntity.ok(response);
     }
 }
