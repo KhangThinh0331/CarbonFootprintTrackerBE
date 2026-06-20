@@ -72,7 +72,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF vì dùng JWT (Stateless)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/leaderboard/monthly").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/leaderboard").permitAll()
                         .anyRequest().authenticated()
                 )
                 // CẤU HÌNH OAUTH2 RESOURCE SERVER TẠI ĐÂY

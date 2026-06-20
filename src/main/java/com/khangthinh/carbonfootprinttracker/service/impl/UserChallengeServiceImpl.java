@@ -2,7 +2,6 @@ package com.khangthinh.carbonfootprinttracker.service.impl;
 
 import com.khangthinh.carbonfootprinttracker.dto.QuizResultResponse;
 import com.khangthinh.carbonfootprinttracker.dto.QuizSubmitRequest;
-import com.khangthinh.carbonfootprinttracker.dto.UserChallengeId;
 import com.khangthinh.carbonfootprinttracker.entity.*;
 import com.khangthinh.carbonfootprinttracker.repository.*;
 import com.khangthinh.carbonfootprinttracker.service.UserChallengeService;
@@ -31,6 +30,14 @@ public class UserChallengeServiceImpl implements UserChallengeService {
                 .orElseThrow(() -> new RuntimeException("User không tồn tại"));
         Challenge challenge = challengeRepository.findById(request.getChallengeId())
                 .orElseThrow(() -> new RuntimeException("Thử thách không tồn tại"));
+
+        LocalDate now = LocalDate.now();
+        if (challenge.getStartDate() != null && now.isBefore(challenge.getStartDate())) {
+            throw new RuntimeException("Thử thách chưa tới ngày bắt đầu!");
+        }
+        if (challenge.getEndDate() != null && now.isAfter(challenge.getEndDate())) {
+            throw new RuntimeException("Thử thách đã kết thúc, không thể tham gia!");
+        }
 
         if (userChallengeRepository.existsByUserAndChallenge(user, challenge)) {
             throw new RuntimeException("Bạn đã thực hiện thử thách này rồi. Mỗi người chỉ được làm 1 lần!");
