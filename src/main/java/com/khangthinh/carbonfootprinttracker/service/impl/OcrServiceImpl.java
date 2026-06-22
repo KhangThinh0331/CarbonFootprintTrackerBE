@@ -11,6 +11,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,11 +21,11 @@ import java.util.regex.Pattern;
 
 @Service
 public class OcrServiceImpl implements OcrService {
-    @Value("${google.vision.credentials-path}")
+    @Value("${google.credentials.content}")
     private String credentialsPath;
     // Khởi tạo Client kết nối với Google bằng file JSON
     private ImageAnnotatorClient getVisionClient() throws IOException {
-        FileInputStream serviceAccountStream = new FileInputStream(credentialsPath);
+        ByteArrayInputStream serviceAccountStream = new ByteArrayInputStream(credentialsPath.getBytes());
         GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccountStream);
         ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
                 .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
